@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PokemonDetails, View, GameMode } from './types';
 import { fetchAllGen1 } from './services/pokemonService';
 import LoadingScreen from './components/LoadingScreen';
 import PokedexGrid from './components/PokedexGrid';
 import PokemonSelector from './components/PokemonSelector';
 import GameArena from './components/GameArena';
-import { Search, Gamepad2, LayoutGrid, Info, User, Users } from 'lucide-react';
+import { Search, Gamepad2, LayoutGrid, User, Users, ChevronRight, UserCircle, X } from 'lucide-react';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -16,6 +16,9 @@ const App: React.FC = () => {
   
   // Game State
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
+  const [p1Name, setP1Name] = useState<string>('');
+  const [p2Name, setP2Name] = useState<string>('');
+  const [isNamingPhase, setIsNamingPhase] = useState<boolean>(false);
   const [p1Companion, setP1Companion] = useState<PokemonDetails | null>(null);
   const [p2Companion, setP2Companion] = useState<PokemonDetails | null>(null);
   const [selectionTurn, setSelectionTurn] = useState<1 | 2>(1);
@@ -23,14 +26,11 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
-    console.log('App: Fetching Pokémon data...');
     const init = async () => {
       try {
         const data = await fetchAllGen1();
-        console.log(`App: Successfully fetched ${data.length} Pokémon.`);
         setPokemonList(data);
       } catch (err: any) {
-        console.error("App: Error fetching Pokémon data:", err);
         setError("Error al cargar los Pokémon. Por favor intenta de nuevo.");
       } finally {
         setLoading(false);
@@ -59,16 +59,28 @@ const App: React.FC = () => {
     setSelectionTurn(1);
   };
 
-  const startNewGame = (mode: GameMode) => {
+  const startNamingPhase = (mode: GameMode) => {
     setGameMode(mode);
-    resetSelection();
+    setP1Name('');
+    setP2Name(mode === 'single' ? 'CPU' : '');
+    setIsNamingPhase(true);
     setActiveView('game');
   };
 
-  const filteredPokemon = pokemonList.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.id.toString() === searchTerm
-  );
+  const finalizeNaming = () => {
+    const finalP1 = p1Name.trim() || 'Jugador 1';
+    const finalP2 = p2Name.trim() || (gameMode === 'single' ? 'CPU' : 'Jugador 2');
+    setP1Name(finalP1);
+    setP2Name(finalP2);
+    setIsNamingPhase(false);
+  };
+
+  const filteredPokemon = useMemo(() => {
+    return pokemonList.filter(p => 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      p.id.toString() === searchTerm
+    );
+  }, [pokemonList, searchTerm]);
 
   if (loading) return <LoadingScreen />;
   
@@ -83,29 +95,34 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-24 bg-softGray font-sans">
-      {/* Header / Nav */}
       <header className="sticky top-0 z-40 w-full bg-pokeRed text-white shadow-lg border-b-8 border-pokeGold">
         <div className="max-w-7xl mx-auto px-4 h-24 flex items-center justify-between">
           <div 
             className="flex items-center gap-4 cursor-pointer group" 
-            onClick={() => setActiveView('pokedex')}
+            onClick={() => {
+              setActiveView('pokedex');
+              setGameMode(null);
+              setIsNamingPhase(false);
+            }}
           >
-            {/* Pokéball Logo */}
             <div className="relative w-14 h-14 bg-white rounded-full border-4 border-gray-900 overflow-hidden shadow-xl group-hover:animate-pokeball-roll transition-all duration-300">
               <div className="absolute top-0 w-full h-1/2 bg-pokeRed border-b-4 border-gray-900"></div>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-white border-4 border-gray-900 rounded-full z-10">
                 <div className="w-full h-full bg-white rounded-full border border-gray-300"></div>
               </div>
             </div>
-            
-            <h1 className="font-pokemon text-4xl mt-2 pokemon-logo hidden sm:block">
+            <h1 className="font-pokemon text-3xl md:text-4xl mt-2 pokemon-logo hidden sm:block">
               PokeCachipum
             </h1>
           </div>
 
           <div className="hidden md:flex bg-white/20 p-1 rounded-full gap-1">
              <button 
-              onClick={() => setActiveView('pokedex')}
+              onClick={() => {
+                setActiveView('pokedex');
+                setGameMode(null);
+                setIsNamingPhase(false);
+              }}
               className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-all ${activeView === 'pokedex' ? 'bg-white text-pokeRed shadow-md' : 'hover:bg-white/10'}`}
              >
                <LayoutGrid size={20} /> Pokédex
@@ -122,66 +139,134 @@ const App: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-pokeRed z-10" size={18} />
             <input 
               type="text" 
-              placeholder="Buscar..."
+              placeholder="Buscar en Pokédex..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 rounded-full text-gray-800 focus:outline-none focus:ring-4 focus:ring-pokeYellow/50 w-32 md:w-64 transition-all"
+              className="pl-10 pr-10 py-2 rounded-full text-gray-800 focus:outline-none focus:ring-4 focus:ring-pokeYellow/50 w-40 md:w-64 transition-all"
             />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pokeRed"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {activeView === 'pokedex' ? (
           <div className="animate-fade-in">
-            <div className="flex items-center gap-3 mb-8 bg-pokeBlue text-white p-6 rounded-2xl shadow-xl">
-               <div className="p-3 bg-white/20 rounded-xl">
-                 <LayoutGrid size={32} />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-pokeBlue text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-4 opacity-10">
+                 <LayoutGrid size={120} />
                </div>
-               <div>
-                 <h2 className="text-3xl font-black uppercase italic">Archivo Pokédex</h2>
-                 <p className="text-blue-100 font-medium">Explorando la región de Kanto: {pokemonList.length} Pokémon encontrados</p>
+               <div className="flex items-center gap-4 z-10">
+                 <div className="p-3 bg-white/20 rounded-2xl">
+                   <LayoutGrid size={32} />
+                 </div>
+                 <div>
+                   <h2 className="text-3xl font-black uppercase italic tracking-tighter">Archivo Pokédex</h2>
+                   <p className="text-blue-100 font-bold opacity-80">Explorando la región de Kanto: {filteredPokemon.length} Pokémon</p>
+                 </div>
                </div>
+               {searchTerm && (
+                 <div className="bg-white/20 px-4 py-2 rounded-xl font-bold text-sm z-10">
+                   Resultados para: "{searchTerm}"
+                 </div>
+               )}
             </div>
-            <PokedexGrid pokemonList={filteredPokemon} />
+            
+            {filteredPokemon.length > 0 ? (
+              <PokedexGrid pokemonList={filteredPokemon} />
+            ) : (
+              <div className="flex flex-col items-center py-20 text-gray-400">
+                <Search size={64} className="mb-4 opacity-20" />
+                <p className="text-2xl font-black">¡No hay Pokémon con ese nombre!</p>
+                <button onClick={() => setSearchTerm('')} className="mt-4 text-pokeBlue font-bold hover:underline">Mostrar todos</button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="animate-fade-in">
             {!gameMode ? (
-              <div className="flex flex-col items-center justify-center py-20 space-y-8">
-                <h2 className="text-4xl font-pokemon text-pokeGold tracking-widest text-center">¡MODO DE JUEGO!</h2>
-                <div className="flex flex-wrap justify-center gap-8">
-                  <button 
-                    onClick={() => startNewGame('single')}
-                    className="group bg-white border-8 border-pokeBlue p-10 rounded-3xl shadow-2xl hover:scale-105 transition-all text-center flex flex-col items-center space-y-4"
-                  >
-                    <div className="p-6 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors">
-                      <User size={64} className="text-pokeBlue" />
+              <div className="flex flex-col items-center justify-center py-20 space-y-12">
+                <div className="text-center">
+                  <h2 className="text-5xl font-pokemon text-pokeGold tracking-widest mb-2">¡MODO DE JUEGO!</h2>
+                  <p className="text-gray-400 font-bold uppercase tracking-[0.3em]">Elige tu desafío</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full max-w-4xl">
+                  <button onClick={() => startNamingPhase('single')} className="group bg-white border-8 border-pokeBlue p-12 rounded-[3rem] shadow-2xl hover:scale-105 transition-all flex flex-col items-center space-y-6">
+                    <div className="p-8 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors shadow-inner">
+                      <User size={80} className="text-pokeBlue" />
                     </div>
-                    <span className="text-2xl font-black text-gray-800 uppercase tracking-tighter">1 Jugador</span>
-                    <p className="text-gray-400 font-bold">Contra la CPU</p>
+                    <div className="text-center">
+                      <span className="text-3xl font-black text-gray-800 uppercase block tracking-tighter">1 Jugador</span>
+                      <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Contra la CPU</span>
+                    </div>
                   </button>
-
-                  <button 
-                    onClick={() => startNewGame('multi')}
-                    className="group bg-white border-8 border-pokeRed p-10 rounded-3xl shadow-2xl hover:scale-105 transition-all text-center flex flex-col items-center space-y-4"
-                  >
-                    <div className="p-6 bg-red-50 rounded-full group-hover:bg-red-100 transition-colors">
-                      <Users size={64} className="text-pokeRed" />
+                  <button onClick={() => startNamingPhase('multi')} className="group bg-white border-8 border-pokeRed p-12 rounded-[3rem] shadow-2xl hover:scale-105 transition-all flex flex-col items-center space-y-6">
+                    <div className="p-8 bg-red-50 rounded-full group-hover:bg-red-100 transition-colors shadow-inner">
+                      <Users size={80} className="text-pokeRed" />
                     </div>
-                    <span className="text-2xl font-black text-gray-800 uppercase tracking-tighter">2 Jugadores</span>
-                    <p className="text-gray-400 font-bold">Local (PVP)</p>
+                    <div className="text-center">
+                      <span className="text-3xl font-black text-gray-800 uppercase block tracking-tighter">2 Jugadores</span>
+                      <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Local (PVP)</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            ) : isNamingPhase ? (
+              <div className="max-w-xl mx-auto bg-white p-12 rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.1)] border-t-8 border-pokeGold animate-float">
+                <div className="text-center mb-10">
+                  <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tighter">Perfil de Entrenador</h2>
+                  <p className="text-gray-400 font-bold uppercase text-xs tracking-widest mt-1 italic">Ingresa los datos para la batalla</p>
+                </div>
+                <div className="space-y-8">
+                  <div className="flex flex-col gap-3">
+                    <label className="text-pokeRed font-black uppercase text-xs ml-4 flex items-center gap-2"><UserCircle size={18} /> Entrenador 1</label>
+                    <input 
+                      autoFocus
+                      type="text" 
+                      maxLength={12}
+                      placeholder="Ej: Ash Ketchum" 
+                      value={p1Name} 
+                      onChange={(e) => setP1Name(e.target.value)}
+                      className="p-5 rounded-3xl border-4 border-red-50 focus:border-pokeRed outline-none transition-all text-2xl font-black bg-red-50 text-gray-800 placeholder:text-red-200"
+                    />
+                  </div>
+                  {gameMode === 'multi' && (
+                    <div className="flex flex-col gap-3">
+                      <label className="text-pokeBlue font-black uppercase text-xs ml-4 flex items-center gap-2"><UserCircle size={18} /> Entrenador 2</label>
+                      <input 
+                        type="text" 
+                        maxLength={12}
+                        placeholder="Ej: Gary Oak" 
+                        value={p2Name} 
+                        onChange={(e) => setP2Name(e.target.value)}
+                        className="p-5 rounded-3xl border-4 border-blue-50 focus:border-pokeBlue outline-none transition-all text-2xl font-black bg-blue-50 text-gray-800 placeholder:text-blue-200"
+                      />
+                    </div>
+                  )}
+                  <button 
+                    onClick={finalizeNaming}
+                    className="w-full bg-pokeGold text-white p-6 rounded-3xl text-2xl font-black shadow-[0_10px_0_0_#C7A008] active:shadow-none active:translate-y-2 hover:bg-pokeYellow transition-all flex items-center justify-center gap-3 group"
+                  >
+                    ¡IR A ELEGIR POKÉMON! <ChevronRight className="group-hover:translate-x-2 transition-transform" />
                   </button>
                 </div>
               </div>
             ) : (
-              <>
+              <div className="animate-fade-in max-w-6xl mx-auto">
                 {(!p1Companion || !p2Companion) && (
                   <PokemonSelector 
                     pokemonList={pokemonList} 
                     selectedP1={p1Companion}
                     selectedP2={p2Companion}
+                    p1Name={p1Name}
+                    p2Name={p2Name}
                     onSelect={handleSelection}
                     currentPlayerTurn={selectionTurn}
                   />
@@ -191,54 +276,44 @@ const App: React.FC = () => {
                   <GameArena 
                     player1={p1Companion} 
                     player2={p2Companion}
+                    p1Name={p1Name}
+                    p2Name={p2Name}
                     mode={gameMode}
                     onResetSelection={resetSelection}
                   />
                 ) : null}
 
-                <div className="mt-8 text-center">
+                <div className="mt-12 text-center">
                   <button 
-                    onClick={() => setGameMode(null)}
-                    className="text-gray-400 font-bold hover:text-pokeRed transition-colors"
+                    onClick={() => {setGameMode(null); setIsNamingPhase(false);}} 
+                    className="group bg-white/50 px-6 py-3 rounded-full text-gray-400 font-black uppercase tracking-widest text-xs hover:text-pokeRed hover:bg-white transition-all shadow-sm border border-transparent hover:border-pokeRed/20"
                   >
-                    ← Cambiar modo de juego
+                    ← Volver a selección de modo
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         )}
       </main>
 
-      {/* Mobile Nav Sticky */}
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 md:hidden bg-gray-800 text-white flex items-center p-2 rounded-full shadow-2xl z-50 border-4 border-pokeRed">
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 md:hidden bg-gray-900/90 backdrop-blur-md text-white flex items-center p-2 rounded-full shadow-2xl z-50 border-4 border-pokeRed">
         <button 
-          onClick={() => setActiveView('pokedex')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${activeView === 'pokedex' ? 'bg-pokeRed text-white' : 'text-gray-400'}`}
+          onClick={() => {setActiveView('pokedex'); setGameMode(null);}} 
+          className={`px-8 py-4 rounded-full font-black transition-all flex items-center gap-2 ${activeView === 'pokedex' ? 'bg-pokeRed shadow-lg scale-110' : 'text-gray-400 hover:text-white'}`}
         >
           <LayoutGrid size={24} />
+          {activeView === 'pokedex' && <span className="text-xs uppercase tracking-widest">Pokédex</span>}
         </button>
+        <div className="w-1 h-8 bg-gray-700 mx-2 rounded-full"></div>
         <button 
-          onClick={() => setActiveView('game')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${activeView === 'game' ? 'bg-pokeRed text-white' : 'text-gray-400'}`}
+          onClick={() => setActiveView('game')} 
+          className={`px-8 py-4 rounded-full font-black transition-all flex items-center gap-2 ${activeView === 'game' ? 'bg-pokeRed shadow-lg scale-110' : 'text-gray-400 hover:text-white'}`}
         >
           <Gamepad2 size={24} />
+          {activeView === 'game' && <span className="text-xs uppercase tracking-widest">Jugar</span>}
         </button>
       </nav>
-
-      <footer className="mt-20 py-12 bg-white border-t-4 border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-pokeRed rounded-full border-2 border-gray-900 relative overflow-hidden">
-               <div className="absolute top-0 w-full h-1/2 bg-pokeRed border-b-2 border-gray-900"></div>
-            </div>
-            <p className="font-bold text-gray-600">© 2024 PokeCachipum - Hecho con Poké-Amor</p>
-          </div>
-          <p className="text-sm font-medium text-gray-400 text-center md:text-right">
-            Los datos e imágenes provienen de PokeAPI. <br className="hidden md:block"/> Todos los derechos pertenecen a Nintendo/Creatures Inc./GAME FREAK inc.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };
