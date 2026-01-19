@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { PokemonDetails, GameChoice, GameResult } from '../types';
 import { GAME_RULES, CHOICE_EMOJIS } from '../constants';
-import confetti from 'https://cdn.skypack.dev/canvas-confetti';
+import confetti from 'canvas-confetti';
 import { Shield, Sword, RefreshCw, User, Users } from 'lucide-react';
 
 interface GameArenaProps {
@@ -82,13 +82,13 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
       {/* Turn Indicator Overlay */}
       {!showReveal && !result && (
         <div className="mb-6 bg-white px-8 py-4 rounded-full shadow-lg border-4 border-pokeGold animate-bounce">
-          <p className="text-2xl font-black text-gray-800 flex items-center gap-3">
+          <div className="text-2xl font-black text-gray-800 flex items-center gap-3">
              {turn === 1 ? (
                <><span className="w-8 h-8 rounded-full bg-pokeRed text-white flex items-center justify-center text-sm">1</span> Turno de Jugador 1</>
              ) : (
                <><span className="w-8 h-8 rounded-full bg-pokeBlue text-white flex items-center justify-center text-sm">2</span> Turno de Jugador 2</>
              )}
-          </p>
+          </div>
         </div>
       )}
 

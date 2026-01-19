@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [pokemonList, setPokemonList] = useState<PokemonDetails[]>([]);
   const [activeView, setActiveView] = useState<View>('pokedex');
+  const [error, setError] = useState<string | null>(null);
   
   // 2-Player Selection State
   const [p1Companion, setP1Companion] = useState<PokemonDetails | null>(null);
@@ -21,12 +22,15 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
+    console.log('App: Fetching Pokémon data...');
     const init = async () => {
       try {
         const data = await fetchAllGen1();
+        console.log(`App: Successfully fetched ${data.length} Pokémon.`);
         setPokemonList(data);
-      } catch (error) {
-        console.error("Error fetching Pokémon data:", error);
+      } catch (err: any) {
+        console.error("App: Error fetching Pokémon data:", err);
+        setError("Error al cargar los Pokémon. Por favor intenta de nuevo.");
       } finally {
         setLoading(false);
       }
@@ -55,6 +59,15 @@ const App: React.FC = () => {
   );
 
   if (loading) return <LoadingScreen />;
+  
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <h1 className="text-2xl font-bold text-red-500 mb-4">{error}</h1>
+        <button onClick={() => window.location.reload()} className="bg-pokeRed text-white px-6 py-2 rounded-full font-bold">Reintentar</button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-24 bg-softGray font-sans">
