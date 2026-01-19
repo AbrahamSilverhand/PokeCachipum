@@ -22,6 +22,27 @@ export const TYPE_COLORS: Record<string, string> = {
   fairy: 'bg-rose-300',
 };
 
+export const TYPE_TRANSLATIONS: Record<string, string> = {
+  normal: 'Normal',
+  fire: 'Fuego',
+  water: 'Agua',
+  electric: 'Eléctrico',
+  grass: 'Planta',
+  ice: 'Hielo',
+  fighting: 'Lucha',
+  poison: 'Veneno',
+  ground: 'Tierra',
+  flying: 'Volador',
+  psychic: 'Psíquico',
+  bug: 'Bicho',
+  rock: 'Roca',
+  ghost: 'Fantasma',
+  dragon: 'Dragón',
+  dark: 'Siniestro',
+  steel: 'Acero',
+  fairy: 'Hada',
+};
+
 export const GAME_RULES: Record<GameChoice, GameChoice> = {
   [GameChoice.ROCK]: GameChoice.SCISSORS,
   [GameChoice.PAPER]: GameChoice.ROCK,
@@ -32,4 +53,10 @@ export const CHOICE_EMOJIS: Record<GameChoice, string> = {
   [GameChoice.ROCK]: '🪨',
   [GameChoice.PAPER]: '📄',
   [GameChoice.SCISSORS]: '✂️',
+};
+
+export const CHOICE_LABELS: Record<GameChoice, string> = {
+  [GameChoice.ROCK]: 'Piedra',
+  [GameChoice.PAPER]: 'Papel',
+  [GameChoice.SCISSORS]: 'Tijeras',
 };

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { PokemonDetails } from '../types';
-import { TYPE_COLORS } from '../constants';
+import { TYPE_COLORS, TYPE_TRANSLATIONS } from '../constants';
 import { Search, Filter, X } from 'lucide-react';
 
 interface PokemonSelectorProps {
@@ -75,7 +75,7 @@ const PokemonSelector: React.FC<PokemonSelectorProps> = ({
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input 
               type="text"
-              placeholder={`¡${currentPlayerTurn === 1 ? p1Name : p2Name}, busca por nombre o ID!`}
+              placeholder={`¡${currentPlayerTurn === 1 ? p1Name : p2Name}, busca por nombre o N.º!`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-4 rounded-xl border-4 border-transparent focus:border-pokeYellow outline-none font-bold text-gray-700 shadow-sm transition-all"
@@ -104,7 +104,7 @@ const PokemonSelector: React.FC<PokemonSelectorProps> = ({
                   : `bg-white text-gray-500 border-gray-100 hover:border-gray-300`
                 }`}
               >
-                {type}
+                {TYPE_TRANSLATIONS[type] || type}
               </button>
             ))}
           </div>
@@ -132,7 +132,7 @@ const PokemonSelector: React.FC<PokemonSelectorProps> = ({
                       : 'border-transparent bg-white hover:bg-gray-50 hover:border-pokeGold/30 hover:-translate-y-1 shadow-md'
                   }`}
                 >
-                  <span className="absolute top-2 left-2 text-[10px] font-black text-gray-300">#{pokemon.id}</span>
+                  <span className="absolute top-2 left-2 text-[10px] font-black text-gray-300">N.º {pokemon.id}</span>
                   <img 
                     src={pokemon.sprites.front_default} 
                     alt={pokemon.name} 
@@ -152,7 +152,7 @@ const PokemonSelector: React.FC<PokemonSelectorProps> = ({
             <div className="p-6 bg-gray-100 rounded-full">
               <Filter size={48} />
             </div>
-            <p className="text-xl font-bold">No se encontraron Pokémon con esos filtros</p>
+            <p className="text-xl font-bold">No se encontraron Pokémon</p>
             <button 
               onClick={() => {setSearchTerm(''); setSelectedType(null);}}
               className="text-pokeBlue font-black uppercase tracking-widest text-sm hover:underline"
@@ -165,7 +165,7 @@ const PokemonSelector: React.FC<PokemonSelectorProps> = ({
 
       <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center">
         <p className="text-sm font-bold text-gray-400 italic">
-          ¡Mostrando {filteredList.length} de {pokemonList.length} Pokémon!
+          ¡Viendo {filteredList.length} de {pokemonList.length} Pokémon!
         </p>
       </div>
     </div>

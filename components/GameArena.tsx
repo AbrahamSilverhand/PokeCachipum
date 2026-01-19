@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { PokemonDetails, GameChoice, GameResult, GameMode } from '../types';
-import { GAME_RULES, CHOICE_EMOJIS } from '../constants';
+import { GAME_RULES, CHOICE_EMOJIS, CHOICE_LABELS } from '../constants';
 import confetti from 'canvas-confetti';
 import { RefreshCw, User, Users, Cpu, Trophy } from 'lucide-react';
 
@@ -197,7 +197,7 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, p1Name, p2Name,
                ¿Qué hará {turn === 1 ? p1Name : p2Name}?
             </h4>
             <p className="text-gray-500 font-bold italic">
-              ¡{mode === 'multi' && turn === 2 ? p1Name + ' ya eligió...' : 'Elige sabiamente!'}
+              ¡{mode === 'multi' && turn === 2 ? p1Name + ' ya eligió...' : '¡Elige con sabiduría!'}
             </p>
           </div>
           <div className="flex gap-6 w-full justify-center">
@@ -212,7 +212,7 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, p1Name, p2Name,
                 }`}
               >
                 <span className="text-5xl group-hover:rotate-12 transition-transform">{CHOICE_EMOJIS[choice]}</span>
-                <span className="font-black uppercase text-sm tracking-widest">{choice === 'rock' ? 'Piedra' : choice === 'paper' ? 'Papel' : 'Tijeras'}</span>
+                <span className="font-black uppercase text-sm tracking-widest">{CHOICE_LABELS[choice]}</span>
               </button>
             ))}
           </div>
@@ -221,7 +221,7 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, p1Name, p2Name,
 
       {isAnimating && (
         <div className="text-center py-10">
-          <p className="font-pokemon text-4xl text-pokeGold animate-pulse mb-4 tracking-widest italic">¡POKE-ATAQUE!</p>
+          <p className="font-pokemon text-4xl text-pokeGold animate-pulse mb-4 tracking-widest italic uppercase">¡Pata-ataque!</p>
           <div className="flex gap-4 justify-center">
              <div className="w-4 h-4 bg-pokeRed rounded-full animate-bounce delay-75"></div>
              <div className="w-4 h-4 bg-pokeYellow rounded-full animate-bounce delay-150"></div>

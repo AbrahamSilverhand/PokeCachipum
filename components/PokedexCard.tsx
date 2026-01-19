@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PokemonDetails } from '../types';
-import { TYPE_COLORS } from '../constants';
+import { TYPE_COLORS, TYPE_TRANSLATIONS } from '../constants';
 
 interface PokedexCardProps {
   pokemon: PokemonDetails;
@@ -22,15 +22,15 @@ const PokedexCard: React.FC<PokedexCardProps> = ({ pokemon }) => {
         />
       </div>
       <div className="text-center">
-        <p className="text-gray-400 font-medium text-sm">#{String(pokemon.id).padStart(3, '0')}</p>
+        <p className="text-gray-400 font-medium text-sm">N.º {String(pokemon.id).padStart(3, '0')}</p>
         <h3 className="text-xl font-bold text-gray-800 capitalize mb-2">{pokemon.name}</h3>
-        <div className="flex gap-1 justify-center">
+        <div className="flex flex-wrap gap-1 justify-center">
           {pokemon.types.map(t => (
             <span 
               key={t.type.name} 
-              className={`${TYPE_COLORS[t.type.name]} text-white text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider`}
+              className={`${TYPE_COLORS[t.type.name]} text-white text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider`}
             >
-              {t.type.name}
+              {TYPE_TRANSLATIONS[t.type.name] || t.type.name}
             </span>
           ))}
         </div>
