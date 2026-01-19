@@ -1,17 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { PokemonDetails, GameChoice, GameResult } from '../types';
+import { PokemonDetails, GameChoice, GameResult, GameMode } from '../types';
 import { GAME_RULES, CHOICE_EMOJIS } from '../constants';
 import confetti from 'canvas-confetti';
-import { Shield, Sword, RefreshCw, User, Users } from 'lucide-react';
+import { RefreshCw, User, Users, Cpu } from 'lucide-react';
 
 interface GameArenaProps {
   player1: PokemonDetails;
   player2: PokemonDetails;
+  mode: GameMode;
   onResetSelection: () => void;
 }
 
-const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelection }) => {
+const GameArena: React.FC<GameArenaProps> = ({ player1, player2, mode, onResetSelection }) => {
   const [turn, setTurn] = useState<1 | 2>(1);
   const [p1Choice, setP1Choice] = useState<GameChoice | null>(null);
   const [p2Choice, setP2Choice] = useState<GameChoice | null>(null);
@@ -30,7 +31,13 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
   const handleChoice = (choice: GameChoice) => {
     if (turn === 1) {
       setP1Choice(choice);
-      setTurn(2);
+      if (mode === 'single') {
+        const cpuChoice = [GameChoice.ROCK, GameChoice.PAPER, GameChoice.SCISSORS][Math.floor(Math.random() * 3)] as GameChoice;
+        setP2Choice(cpuChoice);
+        startBattle(choice, cpuChoice);
+      } else {
+        setTurn(2);
+      }
     } else {
       setP2Choice(choice);
       startBattle(p1Choice!, choice);
@@ -39,13 +46,8 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
 
   const startBattle = (c1: GameChoice, c2: GameChoice) => {
     setIsAnimating(true);
-    // Sequence: 
-    // 1. Brief pause to show P2 made a choice.
-    // 2. Transition to reveal screen.
     setTimeout(() => {
       setShowReveal(true);
-      
-      // 3. Determine result after "reveal"
       setTimeout(() => {
         if (c1 === c2) {
           setResult('DRAW');
@@ -66,7 +68,7 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
     if (result === 'P1_WIN') return 'animate-victory';
     if (result === 'P2_WIN') return 'animate-defeat';
     if (result === 'DRAW') return 'animate-shake';
-    return 'animate-float';
+    return 'animate-sprite-bounce';
   };
 
   const getP2Animation = () => {
@@ -74,19 +76,30 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
     if (result === 'P2_WIN') return 'animate-victory';
     if (result === 'P1_WIN') return 'animate-defeat';
     if (result === 'DRAW') return 'animate-shake';
-    return 'animate-float';
+    return 'animate-sprite-bounce';
+  };
+
+  const getSprite = (pokemon: PokemonDetails) => {
+    return pokemon.sprites.versions?.['generation-v']?.['black-white']?.animated?.front_default || 
+           pokemon.sprites.front_default;
   };
 
   return (
     <div className="flex flex-col items-center w-full max-w-5xl mx-auto py-8 px-4">
-      {/* Turn Indicator Overlay */}
+      {/* Turn Indicator */}
       {!showReveal && !result && (
         <div className="mb-6 bg-white px-8 py-4 rounded-full shadow-lg border-4 border-pokeGold animate-bounce">
           <div className="text-2xl font-black text-gray-800 flex items-center gap-3">
              {turn === 1 ? (
-               <><span className="w-8 h-8 rounded-full bg-pokeRed text-white flex items-center justify-center text-sm">1</span> Turno de Jugador 1</>
+               <span className="flex items-center gap-3">
+                 <span className="w-8 h-8 rounded-full bg-pokeRed text-white flex items-center justify-center text-sm">1</span> 
+                 ¡Tu turno, Jugador 1!
+               </span>
              ) : (
-               <><span className="w-8 h-8 rounded-full bg-pokeBlue text-white flex items-center justify-center text-sm">2</span> Turno de Jugador 2</>
+               <span className="flex items-center gap-3">
+                 <span className="w-8 h-8 rounded-full bg-pokeBlue text-white flex items-center justify-center text-sm">2</span> 
+                 ¡Tu turno, Jugador 2!
+               </span>
              )}
           </div>
         </div>
@@ -101,9 +114,10 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
           <div className="relative mb-4">
             <div className={`absolute -inset-8 rounded-full transition-colors duration-500 ${result === 'P1_WIN' ? 'bg-green-100 animate-pulse' : 'bg-pokeRed/5'}`}></div>
             <img 
-              src={player1.sprites.other['official-artwork'].front_default} 
+              src={getSprite(player1)} 
               alt={player1.name}
-              className={`w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-2xl z-20 relative transition-all duration-500`}
+              className={`w-40 h-40 md:w-56 md:h-56 image-pixelated object-contain drop-shadow-2xl z-20 relative transition-all duration-500`}
+              style={{ imageRendering: 'pixelated' }}
             />
             {showReveal && p1Choice && (
                <div className="absolute top-0 right-0 bg-white border-4 border-pokeRed rounded-full p-4 shadow-xl text-4xl z-30 transform translate-x-1/2 -translate-y-1/4 animate-bounce">
@@ -117,7 +131,7 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
           </span>
         </div>
 
-        {/* Center VS or Status */}
+        {/* Center VS */}
         <div className="z-10 flex flex-col items-center">
           {(!result && !isAnimating) ? (
             <div className="bg-pokeGold text-white font-pokemon text-4xl w-24 h-24 flex items-center justify-center rounded-full border-4 border-white shadow-xl animate-pulse">
@@ -137,9 +151,10 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
           <div className="relative mb-4">
             <div className={`absolute -inset-8 rounded-full transition-colors duration-500 ${result === 'P2_WIN' ? 'bg-green-100 animate-pulse' : 'bg-pokeBlue/5'}`}></div>
             <img 
-              src={player2.sprites.other['official-artwork'].front_default} 
+              src={getSprite(player2)} 
               alt={player2.name}
-              className={`w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-2xl z-20 relative scale-x-[-1] transition-all duration-500`}
+              className={`w-40 h-40 md:w-56 md:h-56 image-pixelated object-contain drop-shadow-2xl z-20 relative scale-x-[-1] transition-all duration-500`}
+              style={{ imageRendering: 'pixelated' }}
             />
             {showReveal && p2Choice && (
                <div className="absolute top-0 left-0 bg-white border-4 border-pokeBlue rounded-full p-4 shadow-xl text-4xl z-30 transform -translate-x-1/2 -translate-y-1/4 animate-bounce">
@@ -149,7 +164,7 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
           </div>
           <h3 className="text-2xl font-black uppercase tracking-tight text-gray-800">{player2.name}</h3>
           <span className="text-pokeBlue font-black flex items-center gap-2 mt-1">
-            <User size={20} /> P2
+            {mode === 'single' ? <Cpu size={20} /> : <User size={20} />} {mode === 'single' ? 'CPU' : 'P2'}
           </span>
         </div>
       </div>
@@ -160,7 +175,7 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
           <h2 className={`text-6xl font-pokemon tracking-widest mb-6 ${
             result === 'P1_WIN' ? 'text-pokeRed' : result === 'P2_WIN' ? 'text-pokeBlue' : 'text-gray-500'
           }`}>
-            {result === 'P1_WIN' ? '¡Gana P1!' : result === 'P2_WIN' ? '¡Gana P2!' : '¡EMPATE!'}
+            {result === 'P1_WIN' ? '¡Gana P1!' : result === 'P2_WIN' ? (mode === 'single' ? '¡Gana CPU!' : '¡Gana P2!') : '¡EMPATE!'}
           </h2>
           <div className="flex gap-4 justify-center">
             <button 
@@ -187,7 +202,7 @@ const GameArena: React.FC<GameArenaProps> = ({ player1, player2, onResetSelectio
               Jugador {turn}: Elige Movimiento
             </h4>
             <p className="text-gray-500 font-bold italic">
-              {turn === 2 ? 'P1 ya eligió... ¡Tu turno!' : 'No dejes que P2 vea tu elección'}
+              {mode === 'multi' && turn === 2 ? 'P1 ya eligió... ¡Tu turno!' : '¿Qué usarás en PokeCachipum?'}
             </p>
           </div>
           

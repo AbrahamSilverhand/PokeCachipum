@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { GameChoice } from './types';
 
 export const TYPE_COLORS: Record<string, string> = {

@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PokéArena</title>
+    <title>PokeCachipum</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,6 +37,7 @@
               'victory': 'victory 0.6s ease-in-out infinite alternate',
               'defeat': 'defeat 1s ease-in-out forwards',
               'shake': 'shake 0.5s ease-in-out',
+              'sprite-bounce': 'spriteBounce 0.6s ease-in-out infinite',
             },
             keyframes: {
               wiggle: {
@@ -74,6 +75,10 @@
                 '0%, 100%': { transform: 'translateX(0)' },
                 '25%': { transform: 'translateX(-5px)' },
                 '75%': { transform: 'translateX(5px)' },
+              },
+              spriteBounce: {
+                '0%, 100%': { transform: 'translateY(0) scaleY(1)' },
+                '50%': { transform: 'translateY(-5px) scaleY(1.05)' },
               }
             }
           }
@@ -103,12 +108,12 @@
     <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.263.1",
-    "axios": "https://esm.sh/axios@1.5.0",
-    "canvas-confetti": "https://esm.sh/canvas-confetti@1.6.0",
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.446.0?external=react",
+    "axios": "https://esm.sh/axios@1.7.7",
+    "canvas-confetti": "https://esm.sh/canvas-confetti@1.9.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/"
   }
@@ -117,7 +122,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Crucial entry point script -->
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>

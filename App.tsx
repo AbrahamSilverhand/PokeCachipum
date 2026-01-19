@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { PokemonDetails, View } from './types';
+import { PokemonDetails, View, GameMode } from './types';
 import { fetchAllGen1 } from './services/pokemonService';
 import LoadingScreen from './components/LoadingScreen';
 import PokedexGrid from './components/PokedexGrid';
 import PokemonSelector from './components/PokemonSelector';
 import GameArena from './components/GameArena';
-import { Search, Gamepad2, LayoutGrid, Info } from 'lucide-react';
+import { Search, Gamepad2, LayoutGrid, Info, User, Users } from 'lucide-react';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -14,7 +14,8 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('pokedex');
   const [error, setError] = useState<string | null>(null);
   
-  // 2-Player Selection State
+  // Game State
+  const [gameMode, setGameMode] = useState<GameMode | null>(null);
   const [p1Companion, setP1Companion] = useState<PokemonDetails | null>(null);
   const [p2Companion, setP2Companion] = useState<PokemonDetails | null>(null);
   const [selectionTurn, setSelectionTurn] = useState<1 | 2>(1);
@@ -41,7 +42,12 @@ const App: React.FC = () => {
   const handleSelection = (pokemon: PokemonDetails, player: 1 | 2) => {
     if (player === 1) {
       setP1Companion(pokemon);
-      setSelectionTurn(2);
+      if (gameMode === 'single') {
+        const randomCpu = pokemonList[Math.floor(Math.random() * pokemonList.length)];
+        setP2Companion(randomCpu);
+      } else {
+        setSelectionTurn(2);
+      }
     } else {
       setP2Companion(pokemon);
     }
@@ -51,6 +57,12 @@ const App: React.FC = () => {
     setP1Companion(null);
     setP2Companion(null);
     setSelectionTurn(1);
+  };
+
+  const startNewGame = (mode: GameMode) => {
+    setGameMode(mode);
+    resetSelection();
+    setActiveView('game');
   };
 
   const filteredPokemon = pokemonList.filter(p => 
@@ -87,7 +99,7 @@ const App: React.FC = () => {
             </div>
             
             <h1 className="font-pokemon text-4xl mt-2 pokemon-logo hidden sm:block">
-              PokéArena
+              PokeCachipum
             </h1>
           </div>
 
@@ -102,7 +114,7 @@ const App: React.FC = () => {
               onClick={() => setActiveView('game')}
               className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-all ${activeView === 'game' ? 'bg-white text-pokeRed shadow-md' : 'hover:bg-white/10'}`}
              >
-               <Gamepad2 size={20} /> 2 Jugadores
+               <Gamepad2 size={20} /> Batalla
              </button>
           </div>
 
@@ -133,32 +145,67 @@ const App: React.FC = () => {
                </div>
             </div>
             <PokedexGrid pokemonList={filteredPokemon} />
-            {filteredPokemon.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                <Info size={64} className="mb-4 opacity-20" />
-                <p className="text-2xl font-bold">No se encontró ningún Pokémon.</p>
-              </div>
-            )}
           </div>
         ) : (
           <div className="animate-fade-in">
-            {(!p1Companion || !p2Companion) && (
-              <PokemonSelector 
-                pokemonList={pokemonList} 
-                selectedP1={p1Companion}
-                selectedP2={p2Companion}
-                onSelect={handleSelection}
-                currentPlayerTurn={selectionTurn}
-              />
+            {!gameMode ? (
+              <div className="flex flex-col items-center justify-center py-20 space-y-8">
+                <h2 className="text-4xl font-pokemon text-pokeGold tracking-widest text-center">¡MODO DE JUEGO!</h2>
+                <div className="flex flex-wrap justify-center gap-8">
+                  <button 
+                    onClick={() => startNewGame('single')}
+                    className="group bg-white border-8 border-pokeBlue p-10 rounded-3xl shadow-2xl hover:scale-105 transition-all text-center flex flex-col items-center space-y-4"
+                  >
+                    <div className="p-6 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors">
+                      <User size={64} className="text-pokeBlue" />
+                    </div>
+                    <span className="text-2xl font-black text-gray-800 uppercase tracking-tighter">1 Jugador</span>
+                    <p className="text-gray-400 font-bold">Contra la CPU</p>
+                  </button>
+
+                  <button 
+                    onClick={() => startNewGame('multi')}
+                    className="group bg-white border-8 border-pokeRed p-10 rounded-3xl shadow-2xl hover:scale-105 transition-all text-center flex flex-col items-center space-y-4"
+                  >
+                    <div className="p-6 bg-red-50 rounded-full group-hover:bg-red-100 transition-colors">
+                      <Users size={64} className="text-pokeRed" />
+                    </div>
+                    <span className="text-2xl font-black text-gray-800 uppercase tracking-tighter">2 Jugadores</span>
+                    <p className="text-gray-400 font-bold">Local (PVP)</p>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {(!p1Companion || !p2Companion) && (
+                  <PokemonSelector 
+                    pokemonList={pokemonList} 
+                    selectedP1={p1Companion}
+                    selectedP2={p2Companion}
+                    onSelect={handleSelection}
+                    currentPlayerTurn={selectionTurn}
+                  />
+                )}
+                
+                {p1Companion && p2Companion ? (
+                  <GameArena 
+                    player1={p1Companion} 
+                    player2={p2Companion}
+                    mode={gameMode}
+                    onResetSelection={resetSelection}
+                  />
+                ) : null}
+
+                <div className="mt-8 text-center">
+                  <button 
+                    onClick={() => setGameMode(null)}
+                    className="text-gray-400 font-bold hover:text-pokeRed transition-colors"
+                  >
+                    ← Cambiar modo de juego
+                  </button>
+                </div>
+              </>
             )}
-            
-            {p1Companion && p2Companion ? (
-              <GameArena 
-                player1={p1Companion} 
-                player2={p2Companion}
-                onResetSelection={resetSelection}
-              />
-            ) : null}
           </div>
         )}
       </main>
@@ -185,7 +232,7 @@ const App: React.FC = () => {
             <div className="w-10 h-10 bg-pokeRed rounded-full border-2 border-gray-900 relative overflow-hidden">
                <div className="absolute top-0 w-full h-1/2 bg-pokeRed border-b-2 border-gray-900"></div>
             </div>
-            <p className="font-bold text-gray-600">© 2024 PokéArena - Hecho con Poké-Amor</p>
+            <p className="font-bold text-gray-600">© 2024 PokeCachipum - Hecho con Poké-Amor</p>
           </div>
           <p className="text-sm font-medium text-gray-400 text-center md:text-right">
             Los datos e imágenes provienen de PokeAPI. <br className="hidden md:block"/> Todos los derechos pertenecen a Nintendo/Creatures Inc./GAME FREAK inc.

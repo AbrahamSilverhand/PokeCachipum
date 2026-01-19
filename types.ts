@@ -14,6 +14,16 @@ export interface PokemonDetails {
         front_default: string;
       };
     };
+    versions?: {
+      'generation-v'?: {
+        'black-white'?: {
+          animated?: {
+            front_default: string;
+            back_default: string;
+          };
+        };
+      };
+    };
   };
   types: {
     type: {
@@ -35,3 +45,4 @@ export enum GameResult {
 }
 
 export type View = 'pokedex' | 'game';
+export type GameMode = 'single' | 'multi';
